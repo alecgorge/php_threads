@@ -31,14 +31,9 @@ THR_RW_LOCK *thr_create_rwlock(void)
 	l->lock = tsrm_mutex_alloc();
 	l->event = thr_create_event();
 #elif defined(PTHREADS)
-
 	l->lock =  (pthread_mutex_t *) malloc(sizeof(pthread_mutex_t));
 	pthread_mutex_init(l->lock,NULL);
 	l->event =  thr_create_event();
-
-       
-        
-        
 #else
 #endif
 	l->count = 0;

@@ -10,8 +10,14 @@ $array = array(
 
 thread_set('mySharedVar', $array);
 
-thread_include('thread.php');
+echo "MASTER: Starting new thread\n";
 
-sleep(3);
 
-echo 'Done';
+//thread_start('thread');
+thread_include(dirname(__FILE__) . '/thread.php');
+
+echo "MASTER: Done!\n";
+
+function thread() {
+    echo "In Threads! \n";
+}

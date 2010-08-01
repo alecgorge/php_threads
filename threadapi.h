@@ -55,10 +55,15 @@ typedef struct _cond_var {
 
 /* TODO: finish other platforms */
 #elif defined(NETWARE)
+# error Only Windows and Linux is supported.
 #elif defined(GNUPTH)
+# error Only Windows and Linux is supported.
 #elif defined(NSAPI)
+# error Only Windows and Linux is supported.
 #elif defined(PI3WEB)
+# error Only Windows and Linux is supported.
 #elif defined(TSRM_ST)
+# error Only Windows and Linux is supported.
 #endif
 
 typedef struct _read_write_lock {
