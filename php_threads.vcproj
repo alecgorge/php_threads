@@ -242,6 +242,10 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
+				RelativePath=".\debug.h"
+				>
+			</File>
+			<File
 				RelativePath=".\php_threads.h"
 				>
 			</File>
