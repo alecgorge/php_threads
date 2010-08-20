@@ -305,6 +305,7 @@ THR_THREAD_PROC(phpthreads_create)
 	//PG(during_request_startup) = 0;
 
 	op_array = zend_compile_file(&file_handle, ZEND_INCLUDE TSRMLS_CC);
+	THR_PRINTF(("phpthreads_create: called zend_compile_file\n"));
 	
 //	EG(return_value_ptr_ptr) = &result;
 	EG(active_op_array) = op_array;
@@ -314,7 +315,9 @@ THR_THREAD_PROC(phpthreads_create)
 	orig_op_array = EG(active_op_array);
 //	new_op_array= EG(active_op_array) = zend_compile_file(&file_handle, ZEND_INCLUDE TSRMLS_CC);*/
 	zend_destroy_file_handle(&file_handle TSRMLS_CC);
+	THR_PRINTF(("phpthreads_create: called zend_destory_file_handle\n"));
 	if (EG(active_op_array)) {
+		THR_PRINTF(("phpthreads_create: calling EG(return_value_ptr_ptr)\n"));
 		EG(return_value_ptr_ptr) = &local_retval;
 
 		/* start the thread in php user land! Instead of calling 
@@ -323,12 +326,16 @@ THR_THREAD_PROC(phpthreads_create)
 		 
 		//retval = (zend_execute_scripts(ZEND_REQUIRE TSRMLS_CC, NULL, 3, prepend_file_p, primary_file, append_file_p) == SUCCESS);
 		//zend_execute(EG(active_op_array) TSRMLS_CC);
+		THR_PRINTF(("phpthreads_create: calling call_user_function()\n"));
 		if (!call_user_function(EG(function_table), NULL, &callback, local_retval, 1, argv TSRMLS_CC ))  {
 			zend_error(E_ERROR, "Problem Starting thread with callback");
 		}
 
+		THR_PRINTF(("phpthreads_create: calling zval_dtor()\n"));
 		zval_dtor(&callback);
+		THR_PRINTF(("phpthreads_create: called zval_dtor(&callback)\n"));
 		zval_dtor(&args);
+		THR_PRINTF(("phpthreads_create: called zend_dtor(&args)\n"));
 		//zval_dtor(&ret_val);
 		//zval_ptr_dtor(EG(return_value_ptr_ptr));
 
@@ -339,13 +346,16 @@ THR_THREAD_PROC(phpthreads_create)
 #else
 		destroy_op_array(EG(active_op_array));
 #endif
+		THR_PRINTF(("phpthreads_create: called destory_op_array()\n"));
 		efree(op_array);
 		EG(active_op_array) = orig_op_array;
 	}
 
 	php_request_shutdown(NULL);
+	THR_PRINTF(("phpthreads_create: called php_request_shutdown()\n"));
  
 	thr_thread_exit(0);
+	THR_PRINTF(("phpthreads_create: called thr_thread_exit()\n"));
 } 
 
 /* {{{ proto string thread_start(string function_name, [any args])
@@ -375,10 +385,10 @@ PHP_FUNCTION(thread_start)
 	/* we wait here until the child thread has copied the
 	   parent threads data */
 	
-	Sleep(5000);
+	//Sleep(5000);
 	THR_PRINTF(("wating on thread start event in thread_start\n"));
-	//thr_wait_event(thread->start_event,THR_INFINITE);
-	Sleep(100);
+	thr_wait_event(thread->start_event,THR_INFINITE);
+	//Sleep(100);
 
 	THR_PRINTF(("calling zend_llist_add_element (whatever that is)\n"));
 	zend_llist_add_element(&THREADS_G(children), (void *)thread);

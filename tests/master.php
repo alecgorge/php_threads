@@ -13,7 +13,7 @@ thread_set('mySharedVar', $array);
 echo "MASTER: Starting new thread\n";
 
 
-thread_start('thread');
+thread_start('thread', 'ohai');
 //var_dump(thread_include(dirname(__FILE__) . '/thread.php'));
 //var_dump(thread_include(dirname(__FILE__) . '/thread2.php'));
 
