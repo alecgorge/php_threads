@@ -8,4 +8,4 @@ for($x = 0; $x < 2000; $x++) {
 	echo "y";
 	usleep(50);
 }
-echo "THREAD: Done!\n";
+echo "\nTHREAD: Done!\n";
