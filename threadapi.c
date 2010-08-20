@@ -287,7 +287,10 @@ int thr_thread_create(THR_THREAD *thread, THR_THREAD_PROC_P callback)
 {
 	thread->id = 0;
 #ifdef TSRM_WIN32
+	THR_PRINTF(("calling _beginthreadex from thr_thread_create\n"));
 	thread->thread=(HANDLE)_beginthreadex(NULL,0,callback,(void *)thread,0,&thread->id);
+	THR_PRINTF(("called _beginthreadex from thr_thread_create\n"));
+	return thread->id;
 #elif defined(PTHREADS)
 	pthread_create(  &(thread->thread), NULL, callback, (void *)thread);
 #elif defined(NETWARE)

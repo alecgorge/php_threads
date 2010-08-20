@@ -268,16 +268,22 @@ THR_THREAD_PROC(phpthreads_create)
 	   TODO: copy system level data now.  We need copy the global zend
 	   structures so that this thread has it's own copy of them. 
 	*/
+	THR_PRINTF(("phpthreads_create: value of args[0] is %x\n", (zval *)thread->args[0]));
 	SG(request_info).path_translated = estrdup(THR_SG(thread->parent_tls,request_info).path_translated);
 	/* copy our arguments */
+	THR_PRINTF(("phpthreads_create: copying zvals\n"));
 	COPY_PZVAL_TO_ZVAL(callback,(zval *)thread->callback);
 	COPY_PZVAL_TO_ZVAL(args,(zval *)thread->args[0]);
+	THR_PRINTF(("phpthreads_create: copied zvals\n"));
 	argv[0] = &args;
 	/* notify we're done copying, don't touch 'thread' after this, 
 	   it will be invalid memory! */
+	THR_PRINTF(("phpthreads_create: calling thr_set_event\n"));
 	thr_set_event(thread->start_event);	
+	THR_PRINTF(("phpthreads_create: called thr_set_event\n"));
 
 	php_request_startup(TSRMLS_C);
+	THR_PRINTF(("phpthreads_create: called php_request_startup\n"));
 
 #ifdef PHP_WIN32
 	//UpdateIniFromRegistry(SG(request_info).path_translated TSRMLS_CC);
@@ -354,16 +360,27 @@ PHP_FUNCTION(thread_start)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z", &callback, &args) == FAILURE) {
 		return;
 	}
-	thread = (THR_THREAD *) emalloc(sizeof(THR_THREAD));
+
+	THR_PRINTF(("starting thread struct setup\n"));
+	thread = (THR_THREAD *) malloc(sizeof(THR_THREAD));
 	thread->start_event = thr_create_event();
 	thread->callback = callback;
 	thread->parent_tls = tsrm_ls;
 	thread->args[0] = (void *) args;
+	thread->args[1] = NULL;
+	THR_PRINTF(("value of args is %x\n", thread->args));
 
-	threadid = thr_thread_create(thread, (void *) phpthreads_create);
+	THR_PRINTF(("calling thr_thread_create from thread_start\n"));
+	thread->id = thr_thread_create(thread, (void *) phpthreads_create);
 	/* we wait here until the child thread has copied the
 	   parent threads data */
-	thr_wait_event(thread->start_event,THR_INFINITE);
+	
+	Sleep(5000);
+	THR_PRINTF(("wating on thread start event in thread_start\n"));
+	//thr_wait_event(thread->start_event,THR_INFINITE);
+	Sleep(100);
+
+	THR_PRINTF(("calling zend_llist_add_element (whatever that is)\n"));
 	zend_llist_add_element(&THREADS_G(children), (void *)thread);
 //	zend_hash_index_update(&THREADS_G(children), threadid, (void *)thread);
 	RETURN_TRUE; 

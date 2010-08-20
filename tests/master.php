@@ -13,12 +13,13 @@ thread_set('mySharedVar', $array);
 echo "MASTER: Starting new thread\n";
 
 
-//thread_start('thread');
-thread_include(dirname(__FILE__) . '/thread.php');
-thread_include(dirname(__FILE__) . '/thread2.php');
+thread_start('thread');
+//var_dump(thread_include(dirname(__FILE__) . '/thread.php'));
+//var_dump(thread_include(dirname(__FILE__) . '/thread2.php'));
 
+sleep(1);
 echo "MASTER: Done!\n";
 exit();
 function thread() {
-    echo "In Threads! \n";
+    echo "||||In Threads! \n";
 }
