@@ -22,7 +22,7 @@
 #endif
 
 /* debugging - use THR_PRINTF(("somthing %s", string)); - note the double brackets.. */
-//#define THR_DEBUG
+#define THR_DEBUG
  
 #ifdef THR_DEBUG
 #define THR_PRINTF(v) printf v; fflush(stdout);
@@ -519,7 +519,8 @@ PHP_FUNCTION(thread_include)
 	   parent threads data */
 
 	THR_PRINTF(("done creating thread  - waiting for thread to start\n"))
-	thr_wait_event(thread->thread, THR_INFINITE);
+	Sleep(10);
+	//thr_wait_event(thread->thread, THR_INFINITE);
 
 	THR_PRINTF(("got message that thread had finished initializing\n"))
 

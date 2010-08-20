@@ -25,7 +25,7 @@
 #endif
 
 /* debugging - use THR_PRINTF(("somthing %s", string)); - note the double brackets.. */
-//#define THR_DEBUG
+#define THR_DEBUG
  
 #ifdef THR_DEBUG
 #define THR_PRINTF(v) printf v; fflush(stdout);
