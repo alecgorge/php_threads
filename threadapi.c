@@ -24,6 +24,16 @@
 #include <process.h>
 #endif
 
+/* debugging - use THR_PRINTF(("somthing %s", string)); - note the double brackets.. */
+//#define THR_DEBUG
+ 
+#ifdef THR_DEBUG
+#define THR_PRINTF(v) printf v; fflush(stdout);
+#else
+#define THR_PRINTF(v)
+#endif
+
+
 THR_RW_LOCK *thr_create_rwlock(void)
 {
 	THR_RW_LOCK *l = (THR_RW_LOCK *)malloc(sizeof(THR_RW_LOCK));
@@ -300,7 +310,9 @@ int thr_thread_create(THR_THREAD *thread, THR_THREAD_PROC_P callback)
 void thr_thread_exit(unsigned int retval)
 {
 #ifdef TSRM_WIN32
+	THR_PRINTF(("calling _endthreadex(retval) \n")); 
 	_endthreadex(retval);
+	THR_PRINTF(("called _endthreadex(retval) \n")); 
 #elif defined(PTHREADS)
 	pthread_exit((void *) &retval);
 #elif defined(NETWARE)
@@ -311,6 +323,7 @@ void thr_thread_exit(unsigned int retval)
 #else
 	return;
 #endif
+	return;
 }
 
 void thr_wait_exit(THR_THREAD *thread)

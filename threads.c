@@ -22,7 +22,7 @@
 #endif
 
 /* debugging - use THR_PRINTF(("somthing %s", string)); - note the double brackets.. */
-#define THR_DEBUG
+//#define THR_DEBUG
  
 #ifdef THR_DEBUG
 #define THR_PRINTF(v) printf v; fflush(stdout);
@@ -467,8 +467,15 @@ void phpthreads_include (void * data) {
 	/* found in tsrm.c and is extremly useful */
 	ts_free_thread();
 
+	THR_PRINTF(("called ts_free_thread() \n")); 
+
 	//free(thread);
-	thr_thread_exit(0);
+	//thr_thread_exit(0);
+
+	//THR_PRINTF(("called ts_thread_exit(0) \n")); 
+
+
+	return;
 
 } 
 
@@ -512,7 +519,7 @@ PHP_FUNCTION(thread_include)
 	   parent threads data */
 
 	THR_PRINTF(("done creating thread  - waiting for thread to start\n"))
-	thr_wait_event(thread->start_event, THR_INFINITE);
+	thr_wait_event(thread->thread, THR_INFINITE);
 
 	THR_PRINTF(("got message that thread had finished initializing\n"))
 

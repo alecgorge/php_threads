@@ -16,6 +16,7 @@
    | Author: Alan Knowles <alan@akbkhome.com>                             |
    +----------------------------------------------------------------------+
 */
+#define PHP_COMPILER_ID "VC6"
 
 #ifndef PHP_THREADS_H
 # define PHP_THREADS_H
@@ -99,4 +100,3 @@ ZEND_END_MODULE_GLOBALS(threads)
 #endif	/* PHP_EXTNAME_H */
  
 /* __footer_here__ */
-

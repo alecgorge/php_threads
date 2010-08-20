@@ -145,10 +145,10 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/D ZEND_DEBUG=0 /D &quot;PHP_EXPORTS&quot; /D &quot;COMPILE_DL_THREADS&quot; /D ZTS=1 /D &quot;ZEND_WIN32&quot; /D &quot;PHP_WIN32&quot; /D HAVE_THREADS=1 /D &quot;WIN32&quot; /D &quot;NDEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_MBCS&quot; /D &quot;_USRDLL&quot; /D &quot;THREADS_EXPORTS&quot;"
 				Optimization="3"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="&quot;H:\winbinder\php5.3.2\source\php\5.3.2\source\vc9\x86\php-5.3.2&quot;;&quot;H:\winbinder\php5.3.2\source\php\5.3.2\source\vc9\x86\php-5.3.2\main&quot;;&quot;H:\winbinder\php5.3.2\source\php\5.3.2\source\vc9\x86\php-5.3.2\Zend&quot;;&quot;H:\winbinder\php5.3.2\source\php\5.3.2\source\vc9\x86\php-5.3.2\TSRM&quot;;&quot;H:\winbinder\php5.3.2\source\php\5.3.2\source\vc9\x86\php-5.3.2\ext\standard&quot;"
-				PreprocessorDefinitions="ZTS=1;NDEBUG;ZEND_DEBUG=0;PHP_WIN32;ZEND_WIN32;WIN32;_WINDOWS;_USRDLL;COMPILE_DL_winbinder;HAVE_winbinder=1"
 				StringPooling="true"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
@@ -173,7 +173,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="H:\winbinder\php5.3.2\source\php\5.3.2\php5ts.lib"
+				AdditionalDependencies="H:\php-gui\php\dev\php5ts.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib"
 				ShowProgress="0"
 				OutputFile="Release/php_threads.dll"
 				LinkIncremental="1"
