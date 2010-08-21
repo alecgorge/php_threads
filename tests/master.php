@@ -1,25 +1,21 @@
 <?php
+error_reporting(E_ALL);
 
 if (!extension_loaded('threads'))
     dl('php_threads.dll');
 
-$array = array(
-0 => 'thread',
-4 => 'hello',
-2 => 'world');
-
-thread_set('mySharedVar', $array);
+// thread_set('thread', array('x'));
+// thread_set('thread2', array('y'));
 
 echo "MASTER: Starting new thread\n";
 
 
-thread_start('thread', 'ohai');
-//var_dump(thread_include(dirname(__FILE__) . '/thread.php'));
-//var_dump(thread_include(dirname(__FILE__) . '/thread2.php'));
+//thread_start('thread');
+thread_include(dirname(__FILE__) . '/thread.php');
+thread_include(dirname(__FILE__) . '/thread2.php');
 
-sleep(1);
-echo "MASTER: Done!\n";
-exit();
+echo "\n\nMASTER: Done!\n\n";
+
 function thread() {
     echo "||||In Threads! \n";
 }

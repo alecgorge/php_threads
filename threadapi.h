@@ -111,7 +111,14 @@ typedef struct _THR_thread {
 	unsigned long id;
 	unsigned long exitcode;
 	void ***parent_tls; /* set to tsrm_ls */
-	void *callback; /* holds php function name */
+	//void *callback; /* holds php function name */
+	// zval *params;
+	// zval *retval_ptr = NULL;
+	// zend_fcall_info fci;
+	// zend_fcall_info_cache fci_cache;
+	//void *retval_ptr;// = NULL;
+	void *fci;
+	void *fci_cache;
 	void *args[2]; /* holds variable number of args*/
 	THR_EVENT start_event;
 } THR_THREAD;

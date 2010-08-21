@@ -1,12 +1,11 @@
 <?php
 
-$array = thread_get('mySharedVar');
+//$str = thread_get('thread');
 
 #echo "THREAD: Print_r'ing the var\n"
-print_r($array);
+//var_dump($array);
 
 for($x = 0; $x < 2000; $x++) {
-	echo "x";
-	usleep(50);
+	echo 'x';
 }
-echo "\nTHREAD: Done!\n";
+//echo "\nTHREAD: Done!\n";

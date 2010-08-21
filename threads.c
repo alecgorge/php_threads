@@ -118,6 +118,7 @@ static void _php_threads_join_children(void *data)
 	pthread_join(thread->thread, NULL);
 #endif
 	
+	THR_PRINTF(("threads: calling thr_close_event in _php_threads_join_children\n"));
 	thr_close_event(thread->start_event);
 	
 
@@ -248,34 +249,58 @@ PHP_MINFO_FUNCTION(threads)
 
 THR_THREAD_PROC(phpthreads_create)
 {
+	zval *retval, *arg;
+//	zend_op *opline = EX(opline);
+	zend_class_entry *old_ce, **new_ce;
 	zval *result = NULL;
 	zend_file_handle file_handle;
 //	zval ret_val;
 	zval *local_retval = NULL;
+	zval *retval_ptr = NULL;
 	zend_op_array *orig_op_array = NULL;
 	zend_op_array *op_array = NULL;
-	zval callback;
-	zval args;
-	zval *argv[1];
-	int callback_len = 0;
+	//zval callback;
+	//zval args;
+	// zval *argv[1];
+	int func_result = 0;
+	//int callback_len = 0;
+	// zval *params;
+	// zval *retval_ptr = NULL;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fci_cache;	
+	zend_fcall_info *fci_hold;
+	zend_fcall_info_cache *fci_cache_hold;
 	THR_THREAD *thread = (THR_THREAD *) data;
 	TSRMLS_FETCH();
 	THREADS_G(self) = thread;
 	/* we need to have the same context as the parent thread */
 	SG(server_context) = THR_SG(thread->parent_tls,server_context);
-
-	/* 
+	
+	// THR_PRINTF(("phpthreads_create: copying zvals \n"));
+	//COPY_PZVAL_TO_ZVAL(*params,(zval *)thread->params);
+	//THR_PRINTF(("phpthreads_create: copying zvals2 \n"));
+	//COPY_PZVAL_TO_ZVAL(*retval_ptr,(zval *)thread->retval_ptr);
+	/*THR_PRINTF(("phpthreads_create: copying fci_cache \n"));
+	fci_cache_hold = (zend_fcall_info_cache *)thread->fci_cache;
+	fci_cache = *fci_cache_hold;
+	THR_PRINTF(("phpthreads_create: copying fci \n"));
+	fci_hold = (zend_fcall_info *)thread->fci;
+	fci = *fci_hold;*/
+	//THR_PRINTF(("---FCI COMPARE: %s\n", TCG(fci)->function_name->value.str))
+	/*
 	   TODO: copy system level data now.  We need copy the global zend
 	   structures so that this thread has it's own copy of them. 
 	*/
-	THR_PRINTF(("phpthreads_create: value of args[0] is %x\n", (zval *)thread->args[0]));
+	//THR_PRINTF(("phpthreads_create: value of parent_tls is %x\n", (zval ***)thread->parent_tls));
+	//THR_PRINTF(("phpthreads_create: translating path: %x\n", THR_SG(thread->parent_tls,request_info)));
+	//SG(server_context) = THR_SG(thread->parent_tls,server_context);
 	SG(request_info).path_translated = estrdup(THR_SG(thread->parent_tls,request_info).path_translated);
 	/* copy our arguments */
-	THR_PRINTF(("phpthreads_create: copying zvals\n"));
-	COPY_PZVAL_TO_ZVAL(callback,(zval *)thread->callback);
-	COPY_PZVAL_TO_ZVAL(args,(zval *)thread->args[0]);
-	THR_PRINTF(("phpthreads_create: copied zvals\n"));
-	argv[0] = &args;
+	//THR_PRINTF(("phpthreads_create: copying zvals\n"));
+	//COPY_PZVAL_TO_ZVAL(callback,(zval *)thread->callback);
+	//COPY_PZVAL_TO_ZVAL(args,(zval *)thread->args[0]);
+	//THR_PRINTF(("phpthreads_create: copied zvals\n"));
+	//argv[0] = &args;
 	/* notify we're done copying, don't touch 'thread' after this, 
 	   it will be invalid memory! */
 	THR_PRINTF(("phpthreads_create: calling thr_set_event\n"));
@@ -289,17 +314,19 @@ THR_THREAD_PROC(phpthreads_create)
 	//UpdateIniFromRegistry(SG(request_info).path_translated TSRMLS_CC);
 #endif
 
-	THR_PRINTF(("Call User Func ??????\n\n==================n\n"));
+	THR_PRINTF(("Call User Func ??????\n\n==================\n\n"));
 	/* this can be an issue we have to deal with somehow */
 	SG(headers_sent) = 1;
 	SG(request_info).no_headers = 1;
 
+	THR_PRINTF(("phpthreads_create: file_handle\n"));
 	file_handle.handle.fp = VCWD_FOPEN(SG(request_info).path_translated, "rb");
 	file_handle.filename = SG(request_info).path_translated;                       
 	
 	file_handle.type = ZEND_HANDLE_FP;
 	file_handle.opened_path = NULL;
 	file_handle.free_filename = 0;
+	THR_PRINTF(("phpthreads_create: file_handle_end\n"));
 
 	EG(exit_status) = 0;
 	//PG(during_request_startup) = 0;
@@ -308,11 +335,11 @@ THR_THREAD_PROC(phpthreads_create)
 	THR_PRINTF(("phpthreads_create: called zend_compile_file\n"));
 	
 //	EG(return_value_ptr_ptr) = &result;
+	orig_op_array = EG(active_op_array);
 	EG(active_op_array) = op_array;
 
     //zend_execute(op_array TSRMLS_CC);
 
-	orig_op_array = EG(active_op_array);
 //	new_op_array= EG(active_op_array) = zend_compile_file(&file_handle, ZEND_INCLUDE TSRMLS_CC);*/
 	zend_destroy_file_handle(&file_handle TSRMLS_CC);
 	THR_PRINTF(("phpthreads_create: called zend_destory_file_handle\n"));
@@ -326,16 +353,63 @@ THR_THREAD_PROC(phpthreads_create)
 		 
 		//retval = (zend_execute_scripts(ZEND_REQUIRE TSRMLS_CC, NULL, 3, prepend_file_p, primary_file, append_file_p) == SUCCESS);
 		//zend_execute(EG(active_op_array) TSRMLS_CC);
-		THR_PRINTF(("phpthreads_create: calling call_user_function()\n"));
-		if (!call_user_function(EG(function_table), NULL, &callback, local_retval, 1, argv TSRMLS_CC ))  {
-			zend_error(E_ERROR, "Problem Starting thread with callback");
+		THR_PRINTF(("phpthreads_create: calling call_user_function() \n")); //%d\n", zend_call_function(*fci, *fci_cache TSRMLS_CC)));
+		//zend_fcall_info_args(&fci_hold, params TSRMLS_CC);
+		/*fci.retval_ptr_ptr = &retval_ptr;
+		func_result = zend_call_function(&fci, &fci_cache TSRMLS_CC);
+		if (func_result == SUCCESS && fci.retval_ptr_ptr && *fci.retval_ptr_ptr) {
+			COPY_PZVAL_TO_ZVAL(*local_retval, *fci.retval_ptr_ptr);
+		}
+		else {
+			THR_PRINTF(("wtf failure %d\n", func_result));
 		}
 
-		THR_PRINTF(("phpthreads_create: calling zval_dtor()\n"));
-		zval_dtor(&callback);
-		THR_PRINTF(("phpthreads_create: called zval_dtor(&callback)\n"));
-		zval_dtor(&args);
-		THR_PRINTF(("phpthreads_create: called zend_dtor(&args)\n"));
+		if (fci.params) {
+			efree(fci.params);
+		}*/
+
+		/*if (THG(fci).function_name == NULL) {
+			if (old_new_handler) {
+				return old_new_handler(ZEND_OPCODE_HANDLER_ARGS_PASSTHRU);
+			} else {
+				return ZEND_USER_OPCODE_DISPATCH;
+			}
+		}*/
+
+//		old_ce = EX_T(opline->op1.u.var).class_entry;
+
+		MAKE_STD_ZVAL(arg);
+		array_init(arg);
+		zend_fcall_info_args(&THG(fci), arg TSRMLS_CC);
+		zend_fcall_info_call(&THG(fci), &THG(fcc), &retval, NULL TSRMLS_CC);
+		zend_fcall_info_args(&THG(fci), NULL TSRMLS_CC);
+		convert_to_string_ex(&retval);
+		if (zend_lookup_class(Z_STRVAL_P(retval), Z_STRLEN_P(retval), &new_ce TSRMLS_CC) == FAILURE) {
+			if (!EG(exception)) {
+				zend_throw_exception_ex(zend_exception_get_default(TSRMLS_C), -1 TSRMLS_CC, "Class %s does not exist", Z_STRVAL_P(retval));
+			}
+			zval_ptr_dtor(&arg);
+			zval_ptr_dtor(&retval);
+
+			/* TODO: What to do about the old handler */
+			//return ZEND_USER_OPCODE_CONTINUE;
+		}
+
+		zval_ptr_dtor(&arg);
+		zval_ptr_dtor(&retval);
+
+//		EX_T(opline->op1.u.var).class_entry = *new_ce;
+
+		/*if (old_new_handler) {
+			return old_new_handler(ZEND_OPCODE_HANDLER_ARGS_PASSTHRU);
+		} else {
+			return ZEND_USER_OPCODE_DISPATCH;
+		}*/
+		//THR_PRINTF(("phpthreads_create: calling zval_dtor()\n"));
+		//zval_dtor(&callback);
+		//THR_PRINTF(("phpthreads_create: called zval_dtor(&callback)\n"));
+		//zval_dtor(&args);
+		//THR_PRINTF(("phpthreads_create: called zend_dtor(&args)\n"));
 		//zval_dtor(&ret_val);
 		//zval_ptr_dtor(EG(return_value_ptr_ptr));
 
@@ -364,20 +438,48 @@ PHP_FUNCTION(thread_start)
 {
 	zval *callback;
 	THR_THREAD *thread = NULL;
-	zval *args;
+	//zval *args;
 	int threadid;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z", &callback, &args) == FAILURE) {
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "f", &fci, &fcc) == FAILURE) {
 		return;
 	}
 
+	THG(fci) = fci;
+	THG(fcc) = fcc;
+	Z_ADDREF_P(THG(fci).function_name);
+#if PHP_VERSION_ID >= 50300
+	if (THG(fci).object_ptr) {
+		Z_ADDREF_P(THG(fci).object_ptr);
+	}
+#endif
+	/*if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z|z", &callback, &args) == FAILURE) {
+		return;
+	}*/
+
+	/*zend_fcall_info_args(&fci, params TSRMLS_CC);
+	fci.retval_ptr_ptr = &retval_ptr;	
+	
+	if (zend_call_function(&fci, &fci_cache TSRMLS_CC) == SUCCESS && fci.retval_ptr_ptr && *fci.retval_ptr_ptr) {
+		COPY_PZVAL_TO_ZVAL(*return_value, *fci.retval_ptr_ptr);
+	}
+
+	zend_fcall_info_args_clear(&fci, 1);*/
+	
+	THR_PRINTF(("---FCI COMPARE: %s\n", fci.function_name->value.str))
 	THR_PRINTF(("starting thread struct setup\n"));
 	thread = (THR_THREAD *) malloc(sizeof(THR_THREAD));
 	thread->start_event = thr_create_event();
-	thread->callback = callback;
+	//thread->callback = callback;
+	//thread->retval_ptr = retval_ptr;
+	//thread->fci = &fci;
+	//thread->fci_cache = &fci_cache;
 	thread->parent_tls = tsrm_ls;
-	thread->args[0] = (void *) args;
-	thread->args[1] = NULL;
+	//thread->args[0] = (void *) args;
+	//thread->args[1] = NULL;
 	THR_PRINTF(("value of args is %x\n", thread->args));
 
 	THR_PRINTF(("calling thr_thread_create from thread_start\n"));
@@ -385,11 +487,11 @@ PHP_FUNCTION(thread_start)
 	/* we wait here until the child thread has copied the
 	   parent threads data */
 	
-	//Sleep(5000);
+
 	THR_PRINTF(("wating on thread start event in thread_start\n"));
 	thr_wait_event(thread->start_event,THR_INFINITE);
-	//Sleep(100);
 
+	
 	THR_PRINTF(("calling zend_llist_add_element (whatever that is)\n"));
 	zend_llist_add_element(&THREADS_G(children), (void *)thread);
 //	zend_hash_index_update(&THREADS_G(children), threadid, (void *)thread);
@@ -527,7 +629,7 @@ PHP_FUNCTION(thread_include)
          /* avoid emalloc ... - it gets totally confused with the threading stuff */
 	thread = (THR_THREAD *) malloc(sizeof(THR_THREAD));
 	thread->start_event = thr_create_event();
-	thread->callback = NULL;
+	//thread->callback = NULL;
 	thread->parent_tls = tsrm_ls;
 	thread->args[0] =  script_file;
 	thread->args[1] =  NULL;

@@ -324,7 +324,10 @@ void thr_thread_exit(unsigned int retval)
 void thr_wait_exit(THR_THREAD *thread)
 {
 #ifdef TSRM_WIN32
+	THR_PRINTF(("threads: calling WaitForSingleObject in thr_wait_exit\n"));
+	//Sleep(100);
 	WaitForSingleObject(thread->thread, THR_INFINITE);
+	THR_PRINTF(("threads: called WaitForSingleObject in thr_wait_exit\n"));
 #elif defined(PTHREADS)
 	pthread_join(thread->thread,NULL);
 #elif defined(NETWARE)

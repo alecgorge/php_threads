@@ -35,6 +35,8 @@ extern zend_module_entry threads_module_entry;
 #  include "threadapi.h"
 # endif
 
+
+
 PHP_MINIT_FUNCTION(threads);
 PHP_MSHUTDOWN_FUNCTION(threads);
 PHP_RINIT_FUNCTION(threads);
@@ -64,6 +66,8 @@ typedef struct _thr_shared_vars {
 ZEND_BEGIN_MODULE_GLOBALS(threads)
 	zend_llist children; /* list to hold list of child threads */
 	THR_THREAD *self;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
 	//THR_SHARED_VARS *vars;
 ZEND_END_MODULE_GLOBALS(threads)
 
@@ -82,6 +86,32 @@ ZEND_END_MODULE_GLOBALS(threads)
    during thread startup.  Most of these are not used yet, but here
    for convenience until development is done. */
 
+/*extern zend_module_entry test_helpers_module_entry;
+#define phpext_test_helpers_ptr &test_helpers_module_entry
+
+#ifdef PHP_WIN32
+#	define PHP_TEST_HELPERS_API __declspec(dllexport)
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#	define PHP_TEST_HELPERS_API __attribute__ ((visibility("default")))
+#else
+#	define PHP_TEST_HELPERS_API
+#endif
+
+#define TEST_HELPERS_VERSION "1.0.1-dev"
+
+ZEND_BEGIN_MODULE_GLOBALS(test_helpers)
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
+ZEND_END_MODULE_GLOBALS(test_helpers)
+
+#ifdef ZTS
+#define TEST_HELPERS_G(v) TSRMG(test_helpers_globals_id, zend_test_helpers_globals *, v)
+#else
+#define TEST_HELPERS_G(v) (test_helpers_globals.v)
+#endif
+
+#define THG(v) TEST_HELPERS_G(v)*/
+
 # define THR_TSRMG(ptsrm_ls, id, type, element)	(((type) (*((void ***) ptsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(id)])->element)
 # define THR_SG(p,v) THR_TSRMG(p,sapi_globals_id, sapi_globals_struct *, v)
 # define THR_CG(p,v) THR_TSRMG(p,compiler_globals_id, zend_compiler_globals *, v)
@@ -96,6 +126,8 @@ ZEND_END_MODULE_GLOBALS(threads)
 # else
 #  define THREADS_G(v) (threads_globals.v)
 # endif
+
+#define THG(v) THREADS_G(v)
 
 #endif	/* PHP_EXTNAME_H */
  
